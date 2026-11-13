@@ -116,4 +116,7 @@ app = create_app()
 
 if __name__ == "__main__":
     esperar_a_la_base(app)
-    app.run(host="0.0.0.0", port=5000)
+    # Local: siempre 5000. En Render (y la mayoría de los PaaS), el
+    # puerto lo asigna la plataforma vía la variable de entorno PORT.
+    puerto = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=puerto)
