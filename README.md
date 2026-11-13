@@ -47,9 +47,33 @@ docker compose down -v
 - La app espera a que Postgres esté lista antes de crear las tablas
   (reintenta unos segundos en vez de romperse en el primer arranque).
 
+## Tests (sin Docker)
+
+```bash
+python -m venv .venv
+.venv\Scripts\activate          # Linux/Mac: source .venv/bin/activate
+pip install -r requirements-dev.txt
+pytest -v
+```
+
+Los tests usan una base SQLite descartable por test, así que corren sin
+necesitar Docker ni Postgres levantados. Por eso `app.py` usa el patrón
+"application factory" (`create_app`): la app de producción (Docker,
+Postgres) y la de testing (SQLite) salen de la misma función, cambiando
+solo la URL de conexión.
+
+## Flujo de ramas
+
+`main` queda como la última versión estable. El trabajo nuevo entra por
+`feature/*`, se integra primero a `develop`, y de `develop` a `main` cuando
+ya está probado. Ejemplo real de este repo: la rama `feature/tests` agregó
+los tests y se integró a `develop` por pull request.
+
 ## Estructura
 
-- `app.py` — la API (Flask + SQLAlchemy).
-- `Dockerfile` — imagen de la API.
+- `app.py` — la API (Flask + SQLAlchemy), con `create_app()` para poder testear.
+- `tests/test_app.py` — tests de los endpoints, con SQLite de prueba.
+- `Dockerfile` — imagen de la API (producción, Postgres).
 - `docker-compose.yml` — levanta la API y Postgres juntos.
-- `requirements.txt` — dependencias.
+- `requirements.txt` — dependencias de producción.
+- `requirements-dev.txt` — las anteriores + pytest.
