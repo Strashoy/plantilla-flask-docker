@@ -53,7 +53,7 @@ docker compose down -v
 python -m venv .venv
 .venv\Scripts\activate          # Linux/Mac: source .venv/bin/activate
 pip install -r requirements-dev.txt
-pytest -v
+python -m pytest -v
 ```
 
 Los tests usan una base SQLite descartable por test, así que corren sin

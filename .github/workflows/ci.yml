@@ -27,7 +27,7 @@ jobs:
         run: pip install -r requirements-dev.txt
 
       - name: Correr tests
-        run: pytest -v
+        run: python -m pytest -v
 
   build-and-push:
     needs: test
