@@ -1,0 +1,24 @@
+# "Blueprint" de Render: describe toda la infraestructura (web + base de
+# datos) como código, para no tener que configurar cada campo a mano en
+# el dashboard. Se usa con "New +" → "Blueprint", apuntando a este repo.
+#
+# Plan "free": el servicio web se duerme tras ~15 min sin tráfico (la
+# primera visita después tarda unos segundos en "despertar") y la base
+# Postgres free expira a los 90 días. Para practicar, alcanza de sobra.
+databases:
+  - name: plantilla-flask-docker-db
+    plan: free
+    databaseName: app
+    user: app
+
+services:
+  - type: web
+    name: plantilla-flask-docker
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: plantilla-flask-docker-db
+          property: connectionString
