@@ -47,9 +47,51 @@ docker compose down -v
 - La app espera a que Postgres esté lista antes de crear las tablas
   (reintenta unos segundos en vez de romperse en el primer arranque).
 
+## Tests (sin Docker)
+
+```bash
+python -m venv .venv
+.venv\Scripts\activate          # Linux/Mac: source .venv/bin/activate
+pip install -r requirements-dev.txt
+python -m pytest -v
+```
+
+Los tests usan una base SQLite descartable por test, así que corren sin
+necesitar Docker ni Postgres levantados. Por eso `app.py` usa el patrón
+"application factory" (`create_app`): la app de producción (Docker,
+Postgres) y la de testing (SQLite) salen de la misma función, cambiando
+solo la URL de conexión.
+
+## CI/CD
+
+```mermaid
+flowchart LR
+    A[push a cualquier rama] --> B[Tests: pytest]
+    B -- falla --> X[Pipeline en rojo, no se publica nada]
+    B -- pasa --> C{¿Es develop o master?}
+    C -- no, es una feature --> D[Termina ahí: solo valida]
+    C -- sí --> E[Build de la imagen Docker]
+    E --> F[Push a ghcr.io]
+```
+
+El job de tests corre siempre, en cualquier rama. El de build-y-push
+corre solo si los tests pasaron **y** la rama es `develop` o `master` —
+así una rama `feature/*` a medio hacer nunca termina publicando una
+imagen. No usa Postgres real: los tests corren contra SQLite, por eso el
+pipeline no necesita levantar ningún servicio de base de datos.
+
+## Flujo de ramas
+
+`main` queda como la última versión estable. El trabajo nuevo entra por
+`feature/*`, se integra primero a `develop`, y de `develop` a `main` cuando
+ya está probado. Ejemplo real de este repo: la rama `feature/tests` agregó
+los tests y se integró a `develop` por pull request.
+
 ## Estructura
 
-- `app.py` — la API (Flask + SQLAlchemy).
-- `Dockerfile` — imagen de la API.
+- `app.py` — la API (Flask + SQLAlchemy), con `create_app()` para poder testear.
+- `tests/test_app.py` — tests de los endpoints, con SQLite de prueba.
+- `Dockerfile` — imagen de la API (producción, Postgres).
 - `docker-compose.yml` — levanta la API y Postgres juntos.
-- `requirements.txt` — dependencias.
+- `requirements.txt` — dependencias de producción.
+- `requirements-dev.txt` — las anteriores + pytest.
