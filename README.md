@@ -53,7 +53,7 @@ docker compose down -v
 python -m venv .venv
 .venv\Scripts\activate          # Linux/Mac: source .venv/bin/activate
 pip install -r requirements-dev.txt
-pytest -v
+python -m pytest -v
 ```
 
 Los tests usan una base SQLite descartable por test, así que corren sin
@@ -61,6 +61,24 @@ necesitar Docker ni Postgres levantados. Por eso `app.py` usa el patrón
 "application factory" (`create_app`): la app de producción (Docker,
 Postgres) y la de testing (SQLite) salen de la misma función, cambiando
 solo la URL de conexión.
+
+## CI/CD
+
+```mermaid
+flowchart LR
+    A[push a cualquier rama] --> B[Tests: pytest]
+    B -- falla --> X[Pipeline en rojo, no se publica nada]
+    B -- pasa --> C{¿Es develop o master?}
+    C -- no, es una feature --> D[Termina ahí: solo valida]
+    C -- sí --> E[Build de la imagen Docker]
+    E --> F[Push a ghcr.io]
+```
+
+El job de tests corre siempre, en cualquier rama. El de build-y-push
+corre solo si los tests pasaron **y** la rama es `develop` o `master` —
+así una rama `feature/*` a medio hacer nunca termina publicando una
+imagen. No usa Postgres real: los tests corren contra SQLite, por eso el
+pipeline no necesita levantar ningún servicio de base de datos.
 
 ## Flujo de ramas
 

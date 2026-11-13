@@ -1,0 +1,55 @@
+name: CI/CD
+
+# Se dispara en cada push (a cualquier rama) y en cada Pull Request hacia
+# develop o master. Dos jobs: primero los tests, y solo si pasan, se
+# construye y se publica la imagen de Docker.
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: [develop, master]
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Instalar dependencias
+        run: pip install -r requirements-dev.txt
+
+      - name: Correr tests
+        run: python -m pytest -v
+
+  build-and-push:
+    needs: test
+    runs-on: ubuntu-latest
+    # Solo publicamos la imagen cuando el código ya está en develop o
+    # master, no en cada rama feature/* a medio hacer.
+    if: github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/master'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Login en GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build y push de la imagen
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/plantilla-flask-docker:latest
+            ghcr.io/${{ github.repository_owner }}/plantilla-flask-docker:${{ github.sha }}
