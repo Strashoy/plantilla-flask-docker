@@ -1,5 +1,12 @@
 # Plantilla: Flask + CRUD + Postgres (dockerizado)
 
+> ⚠️ **Esto es un punto de partida para aprender, no una entrega.** Es un
+> esqueleto genérico (un CRUD de "tareas" de juguete) pensado para practicar
+> Docker, Flask y Postgres antes de cursar. Si lo usás como base de un
+> trabajo práctico, cambiá el modelo y la lógica por los de tu proyecto real:
+> entregar esta plantilla sin modificar, vos o un compañero, es un riesgo de
+> plagio y además no demuestra nada del trabajo propio.
+
 Base reutilizable para cualquier entrega que pida "una app con CRUD sobre
 una base de datos" (p. ej. el TPI de Seminario DevOps). Un solo recurso
 (`tareas`) a propósito: demuestra el CRUD completo sin sobreingeniería.
